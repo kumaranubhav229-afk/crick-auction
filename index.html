@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cricket Auction — T20 / ODI / Test Draft</title>
+<style>
+  :root{--bg:#07111f;--panel:#0e1b2d;--panel2:#13243a;--text:#eef5ff;--muted:#9fb1c7;--accent:#45d483;--danger:#ff5d6c;--gold:#ffd166;--line:#263a54}
+  *{box-sizing:border-box} body{margin:0;background:linear-gradient(135deg,#06101d,#0b1930 55%,#07111f);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+  button,input,select,textarea{font:inherit} button{cursor:pointer;border:0}
+  .wrap{max-width:1200px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:18px}
+  h1{font-size:28px;margin:0}.sub{color:var(--muted);font-size:14px;margin-top:5px}
+  .card{background:rgba(14,27,45,.92);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 15px 40px rgba(0,0,0,.22)}
+  .grid{display:grid;grid-template-columns:1.25fr .75fr;gap:18px}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  input,select,textarea{background:#091525;border:1px solid #2b425f;color:var(--text);padding:11px 12px;border-radius:10px;outline:none}
+  input:focus,select:focus,textarea:focus{border-color:var(--accent)} button{padding:10px 14px;border-radius:10px;background:#1b314d;color:white;font-weight:700}
+  button.primary{background:var(--accent);color:#04130b} button.danger{background:var(--danger)} button.gold{background:var(--gold);color:#17120a}
+  button.ghost{background:#13243a;border:1px solid #2b425f} button:disabled{opacity:.4;cursor:not-allowed}
+  .center{text-align:center}.muted{color:var(--muted)}
+  .room-code{font-size:28px;letter-spacing:5px;font-weight:900;color:var(--gold)} .share{word-break:break-all;font-size:12px;color:var(--muted)}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:12px 0}.stat{background:#0a1728;border:1px solid var(--line);border-radius:12px;padding:12px}.stat b{display:block;font-size:21px}
+  .players{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:12px;max-height:520px;overflow:auto}.player{background:#0a1728;border:1px solid var(--line);border-radius:13px;padding:12px}.player h3{margin:0 0 5px;font-size:15px}.tag{display:inline-block;font-size:11px;color:#c8d6e8;background:#172b44;padding:4px 7px;border-radius:99px;margin:2px 3px 2px 0}
+  .auction{min-height:290px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+  .name{font-size:36px;font-weight:900;margin:5px}.role{color:var(--muted)} .bid{font-size:50px;color:var(--gold);font-weight:900}
+  .turn{color:var(--accent);font-weight:800}.controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .log{max-height:260px;overflow:auto;font-size:13px;line-height:1.5}.log div{padding:7px 0;border-bottom:1px solid #17283d}
+  .team{margin-top:18px}.team-head{display:flex;justify-content:space-between;align-items:center}.team-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}.chip{background:#152a43;border:1px solid #2b425f;padding:7px 9px;border-radius:9px;font-size:12px}
+  .lobby{max-width:640px;margin:6vh auto}.notice{padding:12px;border-radius:10px;background:#10283b;border:1px solid #24506a;color:#cfe9f7;font-size:13px}
+  .danger-note{background:#321821;border-color:#65303b}.good-note{background:#112d21;border-color:#245b3f}
+  .badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:800;background:var(--gold);color:#17120a;margin-left:8px;vertical-align:middle}
+  details{margin-top:15px;background:#0a1728;border:1px solid var(--line);border-radius:12px;padding:12px}summary{cursor:pointer;font-weight:700}
+  textarea{width:100%;min-height:150px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;margin-top:10px}
+  ol{margin:8px 0 0 18px;padding:0;color:var(--muted);font-size:13px;line-height:1.7}
+
+  .match-card{margin-top:18px;background:linear-gradient(145deg,#0c1b2d,#101f34);border:1px solid #2b425f;border-radius:18px;padding:18px}
+  .match-head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+  .score-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+  .score-box{background:#091525;border:1px solid #263a54;border-radius:14px;padding:14px}
+  .score{font-size:30px;font-weight:900;color:var(--gold)}
+  .result{font-size:20px;font-weight:900;color:var(--accent);margin-top:12px}
+  .commentary{background:#091525;border:1px solid #263a54;border-radius:12px;padding:12px;max-height:260px;overflow:auto;font-size:13px;line-height:1.6}
+  .xi{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .xi span{background:#152a43;border:1px solid #2b425f;border-radius:8px;padding:5px 8px;font-size:11px}
+  .verdict{padding:14px;border-radius:14px;background:#112d21;border:1px solid #245b3f;margin-top:14px}
+  .toss{padding:10px 12px;border-radius:10px;background:#172b44;border:1px solid #2b425f;margin-top:10px}
+  .footer{margin-top:18px;color:#71859e;font-size:11px;text-align:center}
+  @media(max-width:850px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.name{font-size:29px}.bid{font-size:40px}}
+</style>
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script type="module">
+/*
+  CRICKET AUCTION — ONLINE MULTIPLAYER (T20 / ODI / TEST)
+  ---------------------------------------------------------
+  Firebase setup (one time, ~3 minutes):
+   1) console.firebase.google.com -> Add project.
+   2) Build -> Realtime Database -> Create database.
+   3) Realtime Database -> Rules -> paste the rules shown in the lobby's
+      "Firebase setup" box (or the test rules below) and Publish.
+   4) Project settings -> Your apps -> Web (</>) -> copy the firebaseConfig.
+   5) EITHER paste it into FIREBASE_CONFIG below, OR paste it into the
+      "Firebase setup" box in the lobby (saved in your browser). Invite links
+      carry the config, so friends do not need to set anything up.
+   6) Host this file on any static host (GitHub Pages, Netlify, Vercel...).
+*/
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getDatabase, ref, set, update, onValue, get } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+/* ====== PASTE YOUR FIREBASE CONFIG HERE (optional — can also be done in the lobby) ====== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBf6gH87TnBzDrV1AYiW1GdQHVG1GklI1c",
+  authDomain: "cricket-auction-43d7e.firebaseapp.com",
+  databaseURL: "https://cricket-auction-43d7e-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "cricket-auction-43d7e",
+  storageBucket: "cricket-auction-43d7e.firebasestorage.app",
+  messagingSenderId: "897690008694",
+  appId: "1:897690008694:web:5c20a4dae6dbcdbb937357",
+  measurementId: "G-EH7W2KSFX1"
+};
+/* ========================================================================================= */
+
+/* ---------- PLAYER POOLS (current international players, picked from ICC rankings, Nov 2026) ----------
+   Format: "Name|Country|Role"  Country: IN PK SL BD EN AU NZ SA AF WI ZW IE SC   Role: BAT WK AR BOWL */
+const COUNTRY = {IN:["India","🇮🇳"],PK:["Pakistan","🇵🇰"],SL:["Sri Lanka","🇱🇰"],BD:["Bangladesh","🇧🇩"],EN:["England","🏴"],AU:["Australia","🇦🇺"],NZ:["New Zealand","🇳🇿"],SA:["South Africa","🇿🇦"],AF:["Afghanistan","🇦🇫"],WI:["West Indies","🌴"],ZW:["Zimbabwe","🇿🇼"],IE:["Ireland","🇮🇪"],SC:["Scotland","🏴"]};
+const ROLE = {BAT:"Batter",WK:"WK-Batter",AR:"All-rounder",BOWL:"Bowler"};
+
+const POOLS = {
+  t20: { label:"T20I", points:30, players:[
+    "Abhishek Sharma|IN|BAT","Ishan Kishan|IN|WK","Tilak Varma|IN|BAT","Suryakumar Yadav|IN|BAT","Sanju Samson|IN|WK","Hardik Pandya|IN|AR","Shivam Dube|IN|AR","Varun Chakravarthy|IN|BOWL","Jasprit Bumrah|IN|BOWL","Arshdeep Singh|IN|BOWL","Axar Patel|IN|AR","Kuldeep Yadav|IN|BOWL",
+    "Phil Salt|EN|WK","Harry Brook|EN|BAT","Jos Buttler|EN|WK","Jacob Bethell|EN|BAT","Will Jacks|EN|AR","Sam Curran|EN|AR","Jofra Archer|EN|BOWL","Adil Rashid|EN|BOWL","Liam Dawson|EN|AR",
+    "Rashid Khan|AF|BOWL","Mujeeb Ur Rahman|AF|BOWL","Azmatullah Omarzai|AF|AR","Rahmanullah Gurbaz|AF|WK",
+    "Pathum Nissanka|SL|BAT","Wanindu Hasaranga|SL|AR","Maheesh Theekshana|SL|BOWL","Matheesha Pathirana|SL|BOWL","Dasun Shanaka|SL|AR",
+    "Sahibzada Farhan|PK|BAT","Saim Ayub|PK|AR","Shaheen Shah Afridi|PK|BOWL","Haris Rauf|PK|BOWL","Abrar Ahmed|PK|BOWL","Salman Ali Agha|PK|AR","Shadab Khan|PK|AR",
+    "Dewald Brevis|SA|BAT","Corbin Bosch|SA|AR","Aiden Markram|SA|BAT","Marco Jansen|SA|AR","David Miller|SA|BAT","Tristan Stubbs|SA|BAT","Kagiso Rabada|SA|BOWL","Keshav Maharaj|SA|BOWL",
+    "Travis Head|AU|BAT","Adam Zampa|AU|BOWL","Glenn Maxwell|AU|AR","Marcus Stoinis|AU|AR","Mitchell Marsh|AU|AR","Josh Inglis|AU|WK","Josh Hazlewood|AU|BOWL","Cameron Green|AU|AR",
+    "Tim Seifert|NZ|WK","Finn Allen|NZ|BAT","Mitchell Santner|NZ|AR","Lockie Ferguson|NZ|BOWL","Devon Conway|NZ|WK","Matt Henry|NZ|BOWL",
+    "Sikandar Raza|ZW|AR","Matthew Forde|WI|AR","Rovman Powell|WI|BAT","Shai Hope|WI|WK","Mustafizur Rahman|BD|BOWL","Litton Das|BD|WK",
+    "Ruturaj Gaikwad|IN|BAT","Rinku Singh|IN|BAT","Jitesh Sharma|IN|WK","Riyan Parag|IN|AR","Nitish Kumar Reddy|IN|AR","Ravi Bishnoi|IN|BOWL","Avesh Khan|IN|BOWL","Mukesh Kumar|IN|BOWL","Mayank Yadav|IN|BOWL","Mohammed Shami|IN|BOWL",
+    "Yashasvi Jaiswal|IN|BAT","Rinku Singh|IN|BAT","Sanju Samson|IN|WK","Rajat Patidar|IN|BAT",
+    "Mohammad Nawaz|PK|AR","Mohammad Wasim Jr|PK|BOWL","Usama Mir|PK|BOWL","Iftikhar Ahmed|PK|AR","Azam Khan|PK|WK","Imad Wasim|PK|AR",
+    "Niroshan Dickwella|SL|WK","Dushan Hemantha|SL|AR","Dunith Wellalage|SL|AR","Kamindu Mendis|SL|AR","Dushmantha Chameera|SL|BOWL","Dilshan Madushanka|SL|BOWL",
+    "Kusal Perera|SL|WK","Bhanuka Rajapaksa|SL|BAT",
+    "Tanzid Hasan|BD|BAT","Parvez Hossain Emon|BD|BAT","Tawhid Hridoy|BD|BAT","Jaker Ali|BD|WK","Rishad Hossain|BD|BOWL","Taskin Ahmed|BD|BOWL",
+    "Najmul Hossain Shanto|BD|BAT","Shoriful Islam|BD|BOWL",
+    "Ben Duckett|EN|BAT","Tom Banton|EN|WK","Jamie Overton|EN|AR","Rehan Ahmed|EN|BOWL","Brydon Carse|EN|AR","Chris Jordan|EN|AR","Luke Wood|EN|BOWL",
+    "Liam Livingstone|EN|AR","Tom Curran|EN|AR","Dawid Malan|EN|BAT",
+    "Matthew Wade|AU|WK","Tim David|AU|BAT","Xavier Bartlett|AU|BOWL","Nathan Ellis|AU|BOWL","Sean Abbott|AU|AR","Aaron Hardie|AU|AR","Cooper Connolly|AU|AR",
+    "Jake Fraser-McGurk|AU|BAT","Kane Richardson|AU|BOWL",
+    "Rachin Ravindra|NZ|AR","Mark Chapman|NZ|BAT","Tim Robinson|NZ|BAT","Glenn Phillips|NZ|AR","Ben Sears|NZ|BOWL","Jacob Duffy|NZ|BOWL","Ish Sodhi|NZ|BOWL",
+    "Devon Conway|NZ|WK","Finn Allen|NZ|BAT",
+    "Naveen-ul-Haq|AF|BOWL","Mohammad Ishaq|AF|WK","Sediqullah Atal|AF|BAT","Darwish Rasooli|AF|BAT","Karim Janat|AF|AR","Qais Ahmad|AF|BOWL","Noor Ahmad|AF|BOWL",
+    "Fakhar Zaman|PK|BAT","Sahibzada Farhan|PK|BAT","Mohammad Haris|PK|WK","Hussain Talat|PK|AR",
+    "Nicholas Pooran|WI|WK","Andre Russell|WI|AR","Alzarri Joseph|WI|BOWL","Akeal Hosein|WI|BOWL","Romario Shepherd|WI|AR","Jason Holder|WI|AR","Brandon King|WI|BAT","Evin Lewis|WI|BAT","Johnson Charles|WI|WK",
+    "Tabraiz Shamsi|SA|BOWL","Anrich Nortje|SA|BOWL","Gerald Coetzee|SA|BOWL","Nandre Burger|SA|BOWL","Reeza Hendricks|SA|BAT","Quinton de Kock|SA|WK","Donovan Ferreira|SA|WK","George Linde|SA|AR",
+    "Sikandar Raza|ZW|AR","Richard Ngarava|ZW|BOWL","Blessing Muzarabani|ZW|BOWL","Brian Bennett|ZW|AR","Clive Madande|ZW|WK",
+    "Paul Stirling|IE|BAT","Lorcan Tucker|IE|WK","Mark Adair|IE|AR","Josh Little|IE|BOWL","Barry McCarthy|IE|BOWL",
+    "Brandon McMullen|SC|AR","George Munsey|SC|BAT","Michael Jones|SC|BAT","Mark Watt|SC|BOWL","Safyaan Sharif|SC|BOWL"
+  ]},
+  odi: { label:"ODI", points:40, players:[
+    "Virat Kohli|IN|BAT","Rohit Sharma|IN|BAT","Shubman Gill|IN|BAT","Shreyas Iyer|IN|BAT","KL Rahul|IN|WK","Yashasvi Jaiswal|IN|BAT","Kuldeep Yadav|IN|BOWL","Mohammed Siraj|IN|BOWL","Arshdeep Singh|IN|BOWL","Harshit Rana|IN|BOWL","Jasprit Bumrah|IN|BOWL","Axar Patel|IN|AR","Ravindra Jadeja|IN|AR","Hardik Pandya|IN|AR","Washington Sundar|IN|AR",
+    "Daryl Mitchell|NZ|BAT","Mitchell Santner|NZ|AR","Michael Bracewell|NZ|AR","Rachin Ravindra|NZ|AR","Matt Henry|NZ|BOWL","Kane Williamson|NZ|BAT","Tom Latham|NZ|WK","Glenn Phillips|NZ|AR","Kyle Jamieson|NZ|BOWL",
+    "Ibrahim Zadran|AF|BAT","Rashid Khan|AF|BOWL","Azmatullah Omarzai|AF|AR","Hashmatullah Shahidi|AF|BAT","Mohammad Nabi|AF|AR","Rahmanullah Gurbaz|AF|WK","Fazalhaq Farooqi|AF|BOWL",
+    "Babar Azam|PK|BAT","Mohammad Rizwan|PK|WK","Shaheen Shah Afridi|PK|BOWL","Abrar Ahmed|PK|BOWL","Haris Rauf|PK|BOWL","Naseem Shah|PK|BOWL","Salman Ali Agha|PK|AR","Fakhar Zaman|PK|BAT",
+    "Wanindu Hasaranga|SL|AR","Maheesh Theekshana|SL|BOWL","Charith Asalanka|SL|BAT","Pathum Nissanka|SL|BAT","Kusal Mendis|SL|WK",
+    "Joe Root|EN|BAT","Jofra Archer|EN|BOWL","Adil Rashid|EN|BOWL","Jos Buttler|EN|WK","Harry Brook|EN|BAT","Jacob Bethell|EN|AR",
+    "Shai Hope|WI|WK","Gudakesh Motie|WI|BOWL","Harry Tector|IE|BAT","Brandon McMullen|SC|AR",
+    "Mehidy Hasan Miraz|BD|AR","Nahid Rana|BD|BOWL","Mustafizur Rahman|BD|BOWL","Sikandar Raza|ZW|AR",
+    "Keshav Maharaj|SA|BOWL","Heinrich Klaasen|SA|WK","Temba Bavuma|SA|BAT","Marco Jansen|SA|AR","Kagiso Rabada|SA|BOWL","Aiden Markram|SA|BAT",
+    "Josh Hazlewood|AU|BOWL","Travis Head|AU|BAT","Mitchell Marsh|AU|AR","Adam Zampa|AU|BOWL","Alex Carey|AU|WK","Mitchell Starc|AU|BOWL",
+    "Ruturaj Gaikwad|IN|BAT","Rishabh Pant|IN|WK","Rinku Singh|IN|BAT","Riyan Parag|IN|AR","Nitish Kumar Reddy|IN|AR","Mohammed Shami|IN|BOWL","Prasidh Krishna|IN|BOWL","Mukesh Kumar|IN|BOWL","Avesh Khan|IN|BOWL","Ravi Bishnoi|IN|BOWL",
+    "Ishan Kishan|IN|WK","Sanju Samson|IN|WK","Rajat Patidar|IN|BAT","Sai Sudharsan|IN|BAT",
+    "Fakhar Zaman|PK|BAT","Imam-ul-Haq|PK|BAT","Saim Ayub|PK|BAT","Saud Shakeel|PK|BAT","Iftikhar Ahmed|PK|AR","Mohammad Nawaz|PK|AR","Shadab Khan|PK|AR","Mohammad Wasim Jr|PK|BOWL","Naseem Shah|PK|BOWL",
+    "Kusal Perera|SL|WK","Kusal Mendis|SL|WK","Dhananjaya de Silva|SL|AR","Dunith Wellalage|SL|AR","Dushmantha Chameera|SL|BOWL","Dilshan Madushanka|SL|BOWL","Asitha Fernando|SL|BOWL","Dushan Hemantha|SL|AR",
+    "Tanzid Hasan|BD|BAT","Tawhid Hridoy|BD|BAT","Jaker Ali|BD|WK","Rishad Hossain|BD|AR","Taskin Ahmed|BD|BOWL","Shoriful Islam|BD|BOWL","Mehedi Hasan|BD|AR",
+    "Ben Duckett|EN|BAT","Dawid Malan|EN|BAT","Liam Livingstone|EN|AR","Will Jacks|EN|AR","Brydon Carse|EN|AR","Gus Atkinson|EN|BOWL","Chris Woakes|EN|AR","Reece Topley|EN|BOWL","Mark Wood|EN|BOWL",
+    "Steve Smith|AU|BAT","Marnus Labuschagne|AU|BAT","Cameron Green|AU|AR","Alex Carey|AU|WK","Josh Inglis|AU|WK","Jake Fraser-McGurk|AU|BAT","Matthew Short|AU|AR","Sean Abbott|AU|AR","Nathan Ellis|AU|BOWL","Xavier Bartlett|AU|BOWL","Mitchell Starc|AU|BOWL",
+    "Tom Blundell|NZ|WK","Mark Chapman|NZ|BAT","Will Young|NZ|BAT","Tom Latham|NZ|WK","Jacob Duffy|NZ|BOWL","Will O'Rourke|NZ|BOWL","Ben Sears|NZ|BOWL","Ish Sodhi|NZ|BOWL",
+    "Sediqullah Atal|AF|BAT","Darwish Rasooli|AF|BAT","Karim Janat|AF|AR","Naveen-ul-Haq|AF|BOWL","Noor Ahmad|AF|BOWL","Qais Ahmad|AF|BOWL","Mujeeb Ur Rahman|AF|BOWL",
+    "Nicholas Pooran|WI|WK","Brandon King|WI|BAT","Evin Lewis|WI|BAT","Keacy Carty|WI|BAT","Roston Chase|WI|AR","Romario Shepherd|WI|AR","Jason Holder|WI|AR","Alzarri Joseph|WI|BOWL","Akeal Hosein|WI|BOWL","Gudakesh Motie|WI|BOWL",
+    "Quinton de Kock|SA|WK","Reeza Hendricks|SA|BAT","Tony de Zorzi|SA|BAT","Wiaan Mulder|SA|AR","George Linde|SA|AR","Anrich Nortje|SA|BOWL","Gerald Coetzee|SA|BOWL","Nandre Burger|SA|BOWL","Tabraiz Shamsi|SA|BOWL",
+    "Sikandar Raza|ZW|AR","Sean Williams|ZW|AR","Craig Ervine|ZW|BAT","Brian Bennett|ZW|AR","Blessing Muzarabani|ZW|BOWL","Richard Ngarava|ZW|BOWL",
+    "Paul Stirling|IE|BAT","Harry Tector|IE|BAT","Lorcan Tucker|IE|WK","Curtis Campher|IE|AR","Mark Adair|IE|AR","Josh Little|IE|BOWL",
+    "George Munsey|SC|BAT","Brandon McMullen|SC|AR","Michael Jones|SC|BAT","Mark Watt|SC|BOWL"
+  ]},
+  test: { label:"Test", points:50, players:[
+    "Joe Root|EN|BAT","Harry Brook|EN|BAT","Ben Stokes|EN|AR","Gus Atkinson|EN|BOWL","Jamie Smith|EN|WK","Zak Crawley|EN|BAT","Ben Duckett|EN|BAT","Ollie Pope|EN|BAT","Josh Tongue|EN|BOWL","Jofra Archer|EN|BOWL","Jacob Bethell|EN|BAT","Shoaib Bashir|EN|BOWL",
+    "Steve Smith|AU|BAT","Travis Head|AU|BAT","Pat Cummins|AU|BOWL","Mitchell Starc|AU|BOWL","Scott Boland|AU|BOWL","Josh Hazlewood|AU|BOWL","Nathan Lyon|AU|BOWL","Alex Carey|AU|WK","Marnus Labuschagne|AU|BAT","Cameron Green|AU|AR","Beau Webster|AU|AR",
+    "Shubman Gill|IN|BAT","Yashasvi Jaiswal|IN|BAT","Rishabh Pant|IN|WK","KL Rahul|IN|BAT","Ravindra Jadeja|IN|AR","Jasprit Bumrah|IN|BOWL","Mohammed Siraj|IN|BOWL","Washington Sundar|IN|AR","Kuldeep Yadav|IN|BOWL","Sai Sudharsan|IN|BAT","Dhruv Jurel|IN|WK","Akash Deep|IN|BOWL",
+    "Kane Williamson|NZ|BAT","Matt Henry|NZ|BOWL","Rachin Ravindra|NZ|AR","Devon Conway|NZ|BAT","Tom Latham|NZ|BAT","Daryl Mitchell|NZ|BAT","Will O'Rourke|NZ|BOWL","Kyle Jamieson|NZ|BOWL",
+    "Marco Jansen|SA|AR","Kagiso Rabada|SA|BOWL","Temba Bavuma|SA|BAT","Aiden Markram|SA|BAT","Wiaan Mulder|SA|AR","Keshav Maharaj|SA|BOWL","Tristan Stubbs|SA|BAT","Ryan Rickelton|SA|WK",
+    "Noman Ali|PK|BOWL","Saud Shakeel|PK|BAT","Mohammad Rizwan|PK|WK","Abrar Ahmed|PK|BOWL","Shaheen Shah Afridi|PK|BOWL","Babar Azam|PK|BAT","Salman Ali Agha|PK|AR",
+    "Mehidy Hasan Miraz|BD|AR","Nahid Rana|BD|BOWL","Taijul Islam|BD|BOWL","Mushfiqur Rahim|BD|WK","Najmul Hossain Shanto|BD|BAT",
+    "Kamindu Mendis|SL|AR","Prabath Jayasuriya|SL|BOWL","Asitha Fernando|SL|BOWL","Pathum Nissanka|SL|BAT","Dhananjaya de Silva|SL|AR",
+    "Justin Greaves|WI|AR","Jayden Seales|WI|BOWL","Shai Hope|WI|BAT","Roston Chase|WI|AR",
+    "Ruturaj Gaikwad|IN|BAT","Rishabh Pant|IN|WK","Rajat Patidar|IN|BAT","Sarfaraz Khan|IN|BAT","Devdutt Padikkal|IN|BAT","Abhimanyu Easwaran|IN|BAT","Prasidh Krishna|IN|BOWL","Mohammed Shami|IN|BOWL","Akash Deep|IN|BOWL","Mukesh Kumar|IN|BOWL","Nitish Kumar Reddy|IN|AR","Shardul Thakur|IN|AR","Axar Patel|IN|AR",
+    "Babar Azam|PK|BAT","Imam-ul-Haq|PK|BAT","Saud Shakeel|PK|BAT","Abdullah Shafique|PK|BAT","Kamran Ghulam|PK|BAT","Agha Salman|PK|AR","Faheem Ashraf|PK|AR","Mohammad Wasim Jr|PK|BOWL","Naseem Shah|PK|BOWL","Mir Hamza|PK|BOWL",
+    "Dhananjaya de Silva|SL|AR","Dinesh Chandimal|SL|WK","Oshada Fernando|SL|BAT","Angelo Mathews|SL|AR","Nishan Madushka|SL|WK","Lahiru Kumara|SL|BOWL","Asitha Fernando|SL|BOWL","Vishwa Fernando|SL|BOWL","Milan Rathnayake|SL|AR","Jeffrey Vandersay|SL|BOWL",
+    "Mahmudul Hasan Joy|BD|BAT","Zakir Hasan|BD|BAT","Mominul Haque|BD|BAT","Shadman Islam|BD|BAT","Shanto|BD|BAT","Litton Das|BD|WK","Jaker Ali|BD|WK","Hasan Mahmud|BD|BOWL","Taskin Ahmed|BD|BOWL","Nayeem Hasan|BD|BOWL","Nahid Rana|BD|BOWL",
+    "Zak Crawley|EN|BAT","Ben Duckett|EN|BAT","Ollie Pope|EN|BAT","Jacob Bethell|EN|BAT","Jamie Smith|EN|WK","Chris Woakes|EN|AR","Brydon Carse|EN|AR","Mark Wood|EN|BOWL","Josh Tongue|EN|BOWL","Shoaib Bashir|EN|BOWL","Rehan Ahmed|EN|BOWL",
+    "Marnus Labuschagne|AU|BAT","Cameron Green|AU|AR","Beau Webster|AU|AR","Josh Inglis|AU|WK","Sam Konstas|AU|BAT","Nathan McSweeney|AU|BAT","Michael Neser|AU|AR","Jhye Richardson|AU|BOWL","Lance Morris|AU|BOWL","Todd Murphy|AU|BOWL",
+    "Will Young|NZ|BAT","Tom Blundell|NZ|WK","Devon Conway|NZ|WK","Rachin Ravindra|NZ|AR","Daryl Mitchell|NZ|BAT","Glenn Phillips|NZ|AR","Michael Bracewell|NZ|AR","Will O'Rourke|NZ|BOWL","Jacob Duffy|NZ|BOWL","Ajaz Patel|NZ|BOWL","Ish Sodhi|NZ|BOWL",
+    "Aiden Markram|SA|BAT","Ryan Rickelton|SA|WK","Tony de Zorzi|SA|BAT","Wiaan Mulder|SA|AR","Corbin Bosch|SA|AR","Senuran Muthusamy|SA|AR","Gerald Coetzee|SA|BOWL","Nandre Burger|SA|BOWL","Anrich Nortje|SA|BOWL","Dane Paterson|SA|BOWL",
+    "Saud Shakeel|PK|BAT","Roston Chase|WI|AR","Kraigg Brathwaite|WI|BAT","John Campbell|WI|BAT","Joshua Da Silva|WI|WK","Justin Greaves|WI|AR","Alick Athanaze|WI|BAT","Jason Holder|WI|AR","Jayden Seales|WI|BOWL","Alzarri Joseph|WI|BOWL","Kevin Sinclair|WI|AR"
+  ]}
+};
+const TEAM_SIZE = 11, VETOES = 2;
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+const clone = o => JSON.parse(JSON.stringify(o));
+const b64e = s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+const b64d = s => decodeURIComponent(escape(atob(s.replace(/-/g,"+").replace(/_/g,"/"))));
+const keyOf = n => n.toLowerCase().replace(/[^a-z0-9]+/g,"_");
+const uid = localStorage.getItem("auction_uid") || (()=>{const x=crypto.randomUUID();localStorage.setItem("auction_uid",x);return x})();
+const hashParams = () => new URLSearchParams(location.hash.slice(1));
+
+/* ---------- Firebase config loading ---------- */
+const isReal = c => c && c.apiKey && c.databaseURL && !String(c.apiKey).startsWith("PASTE_") && !String(c.databaseURL).includes("PASTE_");
+function parseConfig(text){
+  let t=text.replace(/\/\*[\s\S]*?\*\//g,"").replace(/^\s*\/\/.*$/gm,"");
+  const k=t.search(/["']?apiKey["']?\s*:/);
+  if(k<0) return null;
+  const a=t.lastIndexOf("{",k), b=t.indexOf("}",k);
+  if(a<0||b<a) return null;
+  t=t.slice(a,b+1);
+  let c=null;
+  try{ c=JSON.parse(t); }catch(e){
+    try{ c=JSON.parse(t.replace(/'/g,'"').replace(/([{,]\s*)([A-Za-z_]\w*)\s*:/g,'$1"$2":').replace(/,\s*}/g,"}")); }catch(e2){ return null; }
+  }
+  // Firebase omits databaseURL until a Realtime Database exists; guess the default (US) one.
+  if(c && c.apiKey && !c.databaseURL && c.projectId) c.databaseURL=`https://${c.projectId}-default-rtdb.firebaseio.com`;
+  return c;
+}
+function loadConfig(){
+  if(isReal(FIREBASE_CONFIG)) return {cfg:FIREBASE_CONFIG, src:"embedded"};
+  const h = hashParams().get("cfg");
+  if(h){ try{ const c=JSON.parse(b64d(h)); if(isReal(c)){ localStorage.setItem("auction_cfg",JSON.stringify(c)); return {cfg:c,src:"link"}; } }catch(e){} }
+  try{ const c=JSON.parse(localStorage.getItem("auction_cfg")); if(isReal(c)) return {cfg:c,src:"saved"}; }catch(e){}
+  return null;
+}
+let cfgInfo = loadConfig(), db = null;
+if(cfgInfo){ try{ db = getDatabase(initializeApp(cfgInfo.cfg)); }catch(e){ console.error(e); db=null; } }
+
+let state=null, roomId=hashParams().get("room"), me=null, unsub=null;
+function setHash(code){
+  const p = new URLSearchParams(); p.set("room",code);
+  if(cfgInfo && cfgInfo.src!=="embedded") p.set("cfg", b64e(JSON.stringify(cfgInfo.cfg)));
+  location.hash = p.toString();
+}
+const inviteLink = () => location.origin + location.pathname + "#" + (()=>{const p=new URLSearchParams();p.set("room",roomId);if(cfgInfo&&cfgInfo.src!=="embedded")p.set("cfg",b64e(JSON.stringify(cfgInfo.cfg)));return p.toString()})();
+
+/* ---------- Lobby ---------- */
+const RULES_TEXT = `{\n  "rules": {\n    "rooms": {\n      "$room": { ".read": true, ".write": true }\n    }\n  }\n}`;
+function renderLobby(msg=""){
+  const code = roomId || "";
+  $("#app").innerHTML = `<div class="lobby card">
+    <div class="center"><div style="font-size:42px">🏏</div><h1>Cricket Auction</h1>
+      <div class="sub">2–3 players • T20 (30 pts) • ODI (40 pts) • Test (50 pts) • ${VETOES} vetoes each • ${TEAM_SIZE}-player teams</div></div>
+    ${msg?`<div class="notice danger-note" style="margin:14px 0">${esc(msg)}</div>`:""}
+    <div style="margin-top:18px"><label class="muted">Your name</label>
+      <input id="name" placeholder="e.g. Anubhav" maxlength="20" style="width:100%;margin-top:6px" value="${esc(localStorage.getItem("auction_name")||"")}"></div>
+    <div class="row" style="margin-top:12px">
+      <select id="mode">${Object.entries(POOLS).map(([k,m])=>`<option value="${k}">${m.label} — ${m.points} pts • ${m.players.length} players</option>`).join("")}</select>
+      <button class="primary" id="create" ${db?"":"disabled"}>Create room</button>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <input id="joinCode" placeholder="Room code" maxlength="6" style="text-transform:uppercase;width:150px" value="${esc(code)}">
+      <button class="ghost" id="join" ${db?"":"disabled"}>Join room</button>
+    </div>
+    <details ${db?"":"open"}>
+      <summary>Firebase setup ${db?"✅ connected":"⚠️ required"}</summary>
+      <ol>
+        <li>Go to <b>console.firebase.google.com</b> → Add project.</li>
+        <li><b>Build → Realtime Database → Create database</b>.</li>
+        <li>Open the <b>Rules</b> tab, paste this and Publish:<pre style="background:#06101d;padding:8px;border-radius:8px;color:#cfe9f7;font-size:11px;overflow:auto">${esc(RULES_TEXT)}</pre></li>
+        <li><b>Project settings → Your apps → Web (&lt;/&gt;)</b> → copy <code>firebaseConfig</code> and paste below.</li>
+      </ol>
+      <textarea id="cfgText" placeholder='{ "apiKey": "...", "authDomain": "...", "databaseURL": "https://...firebaseio.com", "projectId": "...", ... }'></textarea>
+      <div class="row" style="margin-top:8px"><button class="gold" id="saveCfg">Save &amp; connect</button>
+        ${cfgInfo&&cfgInfo.src!=="embedded"?`<button class="ghost" id="clearCfg">Remove saved config</button>`:""}</div>
+      <div class="muted" style="font-size:12px;margin-top:8px">The config is stored only in this browser. Invite links include it, so friends can join without any setup. (A Firebase web config is not a secret; protect data with rules.)</div>
+    </details>
+    <div class="footer">Pools use current international players based on ICC rankings (Nov 2026). Edit POOLS in the HTML source to tweak.</div>
+  </div>`;
+  $("#create").onclick = createRoom;
+  $("#join").onclick = () => joinRoom($("#joinCode").value.trim().toUpperCase(), $("#name").value.trim());
+  $("#saveCfg").onclick = () => {
+    const c = parseConfig($("#cfgText").value);
+    if(!isReal(c)) return alert("Could not read that config. Paste the whole firebaseConfig { ... } block (it needs apiKey and projectId). If you have not yet created a Realtime Database, do that first: Build > Realtime Database > Create database.");
+    localStorage.setItem("auction_cfg", JSON.stringify(c)); location.reload();
+  };
+  const cc=$("#clearCfg"); if(cc) cc.onclick=()=>{localStorage.removeItem("auction_cfg");location.hash="";location.reload();};
+}
+function renderJoinPrompt(){
+  $("#app").innerHTML = `<div class="lobby card center"><div style="font-size:42px">🏏</div><h2>Join room ${esc(roomId)}</h2>
+    <div class="sub">${esc(POOLS[state.mode]?.label||"")} auction • ${state.startPoints} points each</div>
+    <input id="name" placeholder="Your name" maxlength="20" style="width:100%;margin-top:16px" value="${esc(localStorage.getItem("auction_name")||"")}">
+    <div class="row" style="justify-content:center;margin-top:12px"><button class="primary" id="join">Join</button><button class="ghost" id="home">Back</button></div></div>`;
+  $("#join").onclick=()=>joinRoom(roomId,$("#name").value.trim());
+  $("#home").onclick=()=>{if(unsub)unsub();unsub=null;state=null;roomId=null;location.hash="";renderLobby();};
+}
+
+async function createRoom(){
+  const name=$("#name").value.trim(); if(!name) return alert("Enter your name.");
+  localStorage.setItem("auction_name",name);
+  const mode=$("#mode").value, pool=POOLS[mode];
+  const code=Math.random().toString(36).slice(2,8).toUpperCase();
+  const room={host:uid, mode, startPoints:pool.points, phase:"lobby", players:buildPlayers(mode),
+    users:{[uid]:{name,points:pool.points,skips:VETOES,joinedAt:Date.now()}},
+    log:[{t:Date.now(),m:`${name} created a ${pool.label} room.`}]};
+  try{ await set(ref(db,"rooms/"+code),room); }catch(e){ return alert("Could not create room: "+e.message+"\nCheck your Realtime Database rules."); }
+  roomId=code; setHash(code); subscribe();
+}
+function buildPlayers(mode){
+  const out={};
+  POOLS[mode].players.forEach(s=>{const [n,c,r]=s.split("|");out[keyOf(n)]={name:n,country:COUNTRY[c][0],flag:COUNTRY[c][1],role:ROLE[r],status:"available"};});
+  return out;
+}
+async function joinRoom(code,name){
+  if(!code||!name) return alert("Enter name and room code.");
+  localStorage.setItem("auction_name",name);
+  let snap; try{ snap=await get(ref(db,"rooms/"+code)); }catch(e){ return alert("Firebase error: "+e.message); }
+  if(!snap.exists()) return alert("Room not found.");
+  const x=snap.val();
+  if(!x.users?.[uid]){
+    if(Object.keys(x.users||{}).length>=3) return alert("Room is full.");
+    if(x.phase!=="lobby") return alert("Auction already started.");
+    await update(ref(db,"rooms/"+code),{[`users/${uid}`]:{name,points:x.startPoints,skips:VETOES,joinedAt:Date.now()}});
+  }
+  roomId=code; setHash(code); subscribe();
+}
+function subscribe(){
+  if(unsub) unsub();
+  unsub=onValue(ref(db,"rooms/"+roomId),snap=>{
+    if(!snap.exists()){ state=null; roomId=null; location.hash=""; return renderLobby("Room no longer exists."); }
+    state=snap.val(); me=state.users?.[uid];
+    if(!me) return renderJoinPrompt();
+    renderGame();
+  },err=>renderLobby("Firebase error: "+err.message));
+}
+
+/* ---------- state helpers ---------- */
+const logs=()=>{const l=state.log||[];return Array.isArray(l)?l:Object.values(l)};
+const addLog=m=>[...logs(),{t:Date.now(),m}].slice(-60);
+const patch=obj=>update(ref(db,"rooms/"+roomId),obj);
+const users=()=>Object.entries(state.users||{}).map(([id,u])=>({id,...u,team:u.team||[]})).sort((a,b)=>(a.joinedAt||0)-(b.joinedAt||0));
+const full=u=>u.team.length>=TEAM_SIZE;
+const maxBid=u=>u.points-(TEAM_SIZE-u.team.length-1);   // keep 1 pt for every other empty slot
+const uname=id=>state.users?.[id]?.name||"Player";
+
+function nextTurn(fromId,highest,bid,passes,us=users()){
+  const i=us.findIndex(u=>u.id===fromId);
+  for(let k=1;k<=us.length;k++){
+    const u=us[(i+k)%us.length];
+    if(u.id!==highest && !passes[u.id] && !full(u) && maxBid(u)>bid) return u.id;
+  }
+  return null;
+}
+function firstTurn(pref,us){
+  const i=Math.max(0,us.findIndex(u=>u.id===pref));
+  for(let k=0;k<us.length;k++){const u=us[(i+k)%us.length]; if(!full(u)) return u.id;}
+  return null;
+}
+// Fills `up` with the next nomination (or finish) based on a working copy of players/users.
+function advance(up,pl,us,prefTurn){
+  const avail=()=>Object.keys(pl).filter(k=>pl[k].status==="available");
+  if(us.every(full)){ up.phase="finished"; up.auction=null; return up; }
+  let keys=avail();
+  if(!keys.length && !state.requeued){
+    const un=Object.keys(pl).filter(k=>pl[k].status==="unsold");
+    if(un.length){ un.forEach(k=>{pl[k].status="available";up[`players/${k}/status`]="available";}); up.requeued=true; keys=avail(); }
+  }
+  if(!keys.length){ up.phase="finished"; up.auction=null; return up; }
+  // `prefTurn` is the player who opens this nomination. The opening bidder
+  // is deliberately independent of who won the previous player. This makes
+  // the auction rotate A -> B -> C -> A for successive nominations.
+  up.auction={playerKey:keys[Math.floor(Math.random()*keys.length)],started:false,currentBid:0,turn:firstTurn(prefTurn,us),openingTurn:firstTurn(prefTurn,us),passes:null};
+  return up;
+}
+
+/* ---------- actions ---------- */
+async function startAuction(){
+  const up={phase:"auction"};
+  advance(up,clone(state.players),users(),state.host);
+  up.log=addLog(`${uname(state.host)} starts the ${POOLS[state.mode].label} auction.`);
+  await patch(up);
+}
+async function settle(a,winnerId,passes){
+  const up={}, pl=clone(state.players), us=users(), p=pl[a.playerKey];
+  let msg, pref;
+  if(winnerId){
+    const w=us.find(u=>u.id===winnerId);
+    w.team=[...w.team,{name:p.name,country:p.country,role:p.role,price:a.currentBid}]; w.points-=a.currentBid;
+    up[`users/${winnerId}/points`]=w.points; up[`users/${winnerId}/team`]=w.team;
+    p.status="sold"; up[`players/${a.playerKey}/status`]="sold"; up[`players/${a.playerKey}/owner`]=winnerId;
+    msg=`${w.name} bought ${p.name} for ${a.currentBid} points.`;
+    // Next player nomination starts with the next participant, not the winner.
+    const oi=us.findIndex(u=>u.id===a.openingTurn);
+    pref=us.length ? us[(oi+1+us.length)%us.length].id : winnerId;
+  } else {
+    p.status="unsold"; up[`players/${a.playerKey}/status`]="unsold";
+    msg=`${p.name} went unsold.`;
+    const oi=us.findIndex(u=>u.id===a.openingTurn);
+    pref=us.length ? us[(oi+1+us.length)%us.length].id : a.openingTurn;
+  }
+  advance(up,pl,us,pref);
+  up.log=addLog(msg);
+  await patch(up);
+}
+async function doBid(inc){
+  const a=state.auction; if(!a||a.turn!==uid) return;
+  const mu=users().find(u=>u.id===uid), nb=a.currentBid+inc;
+  if(nb>maxBid(mu)) return alert("That bid is above your limit (you must keep 1 point for each empty team slot).");
+  const next=nextTurn(uid,uid,nb,{});
+  const na={...a,started:true,currentBid:nb,highestBidder:uid,passes:null,turn:next||uid};
+  if(!next){ // nobody else can outbid -> sold
+    await settle(na,uid,{}); return;
+  }
+  await patch({auction:na,log:addLog(`${me.name} bid ${nb} for ${state.players[a.playerKey].name}.`)});
+}
+async function doPass(){
+  const a=state.auction; if(!a||a.turn!==uid) return;
+  const passes={...(a.passes||{}),[uid]:true}, us=users();
+  const pending=us.filter(u=>u.id!==a.highestBidder && !full(u) && !passes[u.id] && maxBid(u)>a.currentBid);
+  if(!pending.length) return settle(a,a.highestBidder||null,passes);
+  const next=nextTurn(uid,a.highestBidder||null,a.currentBid,passes,us);
+  await patch({auction:{...a,passes,turn:next},log:addLog(`${me.name} passed.`)});
+}
+async function doVeto(){
+  const a=state.auction; if(!a||a.started||me.skips<=0) return;
+  const up={}, pl=clone(state.players), us=users(), p=pl[a.playerKey];
+  p.status="vetoed"; up[`players/${a.playerKey}/status`]="vetoed";
+  up[`users/${uid}/skips`]=me.skips-1;
+  advance(up,pl,us,a.turn);
+  up.log=addLog(`${me.name} used a veto and removed ${p.name} from the pool.`);
+  await patch(up);
+}
+async function resetRoom(){
+  if(!confirm("Reset the room back to the lobby? All teams and points will be reset.")) return;
+  const up={phase:"lobby",auction:null,requeued:null,match:null,players:buildPlayers(state.mode),log:[{t:Date.now(),m:"Room was reset by the host."}]};
+  users().forEach(u=>{up[`users/${u.id}/points`]=state.startPoints;up[`users/${u.id}/skips`]=VETOES;up[`users/${u.id}/team`]=null;});
+  await patch(up);
+}
+
+
+/* ---------- imaginary match simulation ---------- */
+const PLAYER_RATING = {
+  "Virat Kohli":94,"Rohit Sharma":91,"Shubman Gill":94,"Shreyas Iyer":86,"KL Rahul":88,"Yashasvi Jaiswal":88,
+  "Kuldeep Yadav":91,"Mohammed Siraj":84,"Arshdeep Singh":84,"Harshit Rana":78,"Jasprit Bumrah":96,"Axar Patel":88,
+  "Ravindra Jadeja":90,"Hardik Pandya":88,"Washington Sundar":80,"Daryl Mitchell":90,"Mitchell Santner":82,
+  "Michael Bracewell":78,"Rachin Ravindra":87,"Matt Henry":86,"Kane Williamson":90,"Tom Latham":85,"Glenn Phillips":82,
+  "Kyle Jamieson":82,"Ibrahim Zadran":83,"Rashid Khan":95,"Azmatullah Omarzai":82,"Hashmatullah Shahidi":78,
+  "Mohammad Nabi":80,"Rahmanullah Gurbaz":84,"Fazalhaq Farooqi":82,"Babar Azam":91,"Mohammad Rizwan":88,
+  "Shaheen Shah Afridi":92,"Abrar Ahmed":79,"Haris Rauf":84,"Naseem Shah":86,"Salman Ali Agha":80,"Fakhar Zaman":83,
+  "Wanindu Hasaranga":90,"Maheesh Theekshana":84,"Charith Asalanka":82,"Pathum Nissanka":86,"Kusal Mendis":84,
+  "Joe Root":94,"Jofra Archer":91,"Adil Rashid":87,"Jos Buttler":91,"Harry Brook":91,"Jacob Bethell":79,
+  "Shai Hope":84,"Gudakesh Motie":78,"Harry Tector":82,"Brandon McMullen":77,"Mehidy Hasan Miraz":84,"Nahid Rana":78,
+  "Mustafizur Rahman":82,"Sikandar Raza":84,"Keshav Maharaj":84,"Heinrich Klaasen":91,"Temba Bavuma":81,
+  "Marco Jansen":88,"Kagiso Rabada":92,"Aiden Markram":86,"Josh Hazlewood":91,"Travis Head":94,"Mitchell Marsh":85,
+  "Adam Zampa":87,"Alex Carey":82,"Mitchell Starc":91
+};
+function rating(p){ return PLAYER_RATING[p.name] || ({Batter:80,"WK-Batter":81,"All-rounder":81,Bowler:80}[p.role]||80); }
+function batRating(team){
+  const rs=team.map(rating);
+  return Math.round(rs.reduce((a,b)=>a+b,0)/rs.length + team.filter(p=>p.role==="Batter"||p.role==="WK-Batter").length*1.2 + team.filter(p=>p.role==="All-rounder").length*.5);
+}
+function bowlRating(team){
+  const rs=team.map(rating);
+  return Math.round(rs.reduce((a,b)=>a+b,0)/rs.length + team.filter(p=>p.role==="Bowler").length*1.5 + team.filter(p=>p.role==="All-rounder").length*.5);
+}
+function rand(min,max){return Math.random()*(max-min)+min;}
+function pickWeighted(team, batting=true){
+  const pool=team.filter(p=>batting?(p.role==="Batter"||p.role==="WK-Batter"||p.role==="All-rounder"):true);
+  return pool[Math.floor(Math.random()*pool.length)] || team[0];
+}
+function makeBatting(team, bowlingTeam, target=null, mode="odi"){
+  const maxRuns=mode==="t20"?220:mode==="test"?520:390;
+  const base=mode==="t20"?145:mode==="test"?365:255;
+  const advantage=(batRating(team)-bowlRating(bowlingTeam))*1.25;
+  let score=Math.round(base+advantage+rand(-30,35));
+  score=Math.max(mode==="t20"?95:mode==="test"?210:170,Math.min(maxRuns,score));
+  let wickets=mode==="test"?Math.floor(rand(4,10)):Math.floor(rand(4,10));
+  if(target!=null) score=Math.min(score,target+rand(-8,18));
+  const bats=team.slice().sort(()=>Math.random()-0.5).slice(0,Math.min(6,team.length));
+  let remaining=score;
+  const batLines=bats.map((p,i)=>{
+    let r=Math.round(remaining*(i===0?.22:i===1?.20:i===2?.17:i===3?.15:i===4?.13:.08)*rand(.75,1.25));
+    r=Math.max(5,Math.min(remaining- (bats.length-i-1)*3,r));
+    remaining-=r;
+    return {name:p.name,runs:r,balls:Math.max(8,Math.round(r/rand(.55,.95)))};
+  });
+  if(remaining>0) batLines[batLines.length-1].runs+=remaining;
+  const bowlers=bowlingTeam.filter(p=>p.role==="Bowler"||p.role==="All-rounder").slice().sort(()=>Math.random()-0.5).slice(0,5);
+  const bowlLines=bowlers.map((p,i)=>{
+    const wk=i===0?Math.max(1,Math.round(wickets*.28)):Math.max(0,Math.round(wickets*.18*rand(.5,1.5)));
+    return {name:p.name,wickets:Math.min(4,wk),runs:Math.round((score/10)*rand(.65,1.0))};
+  });
+  return {score,wickets,batLines,bowlLines};
+}
+function simulateMatch(){
+  const us=users().filter(u=>u.team.length===TEAM_SIZE);
+  if(us.length<2) return alert("You need two complete teams of 11 players to simulate a match.");
+  if(state.match) return;
+  const a=us[0], b=us[1], mode=state.mode;
+  const tossWinner=Math.random()<.5?a:b;
+  const other=tossWinner.id===a.id?b:a;
+  const decision=Math.random()<.5?"bat":"field";
+  let first=tossWinner, second=other;
+  if(decision==="field"){first=other;second=tossWinner;}
+  const inn1=makeBatting(first.team,second.team,null,mode);
+  const target=inn1.score+1;
+  let inn2=makeBatting(second.team,first.team,target,mode);
+  if(inn2.score>=target){
+    inn2.score=target+Math.floor(rand(1,10));
+    inn2.wickets=Math.max(2,Math.min(9,inn2.wickets-1));
+  } else {
+    inn2.score=Math.min(inn2.score,target-1);
+  }
+  const winner=inn2.score>=target?second:first;
+  const margin=inn2.score>=target
+    ? `${10-inn2.wickets} wickets`
+    : `${target-1-inn2.score} runs`;
+  const modeLabel=POOLS[mode].label;
+  const match={
+    mode,teamA:{id:a.id,name:a.name,team:a.team},teamB:{id:b.id,name:b.name,team:b.team},
+    tossWinner:tossWinner.id,decision,first:first.id,second:second.id,innings1:inn1,innings2:inn2,
+    winner:winner.id,margin,createdAt:Date.now(),
+    commentary:[
+      `Toss: ${tossWinner.name} won the toss and chose to ${decision} first.`,
+      `${first.name} posted ${inn1.score}/${inn1.wickets} in the first innings.`,
+      `${second.name} began the chase with a target of ${target}.`,
+      `${second.name} finished on ${inn2.score}/${inn2.wickets}.`,
+      `${winner.name} won by ${margin}.`,
+      `${winner.name} looked stronger overall in this simulated ${modeLabel} matchup.`
+    ]
+  };
+  patch({match,phase:"finished",log:addLog(`Imaginary match simulated: ${winner.name} won by ${margin}.`)});
+}
+function teamStrength(team){
+  return Math.round((batRating(team)+bowlRating(team))/2);
+}
+function renderMatch(){
+  const m=state.match;
+  if(!m) return "";
+  const a=m.teamA,b=m.teamB;
+  const score=(inn)=>`${inn.score}/${inn.wickets}`;
+  const winner=state.users[m.winner]?.name || (m.winner===a.id?a.name:b.name);
+  const verdictScoreA=teamStrength(a.team), verdictScoreB=teamStrength(b.team);
+  const verdict=verdictScoreA===verdictScoreB
+    ? "Very even matchup — the toss and execution would likely decide it."
+    : `${verdictScoreA>verdictScoreB?a.name:b.name} is the stronger XI on paper, with the better combined batting/bowling balance.`;
+  const lines=Object.entries(state.users||{}).map(([id,u])=>({id,...u})).filter(u=>u.id===a.id||u.id===b.id);
+  return `<div class="match-card">
+    <div class="match-head"><div><h2 style="margin:0">🏟️ Imaginary ${esc(POOLS[m.mode].label)} Match</h2><div class="sub">Playing XI confirmed • simulated result</div></div>
+    <span class="badge">MATCH COMPLETE</span></div>
+    <div class="toss">🪙 <b>Toss:</b> ${esc(state.users[m.tossWinner]?.name||"Winner")} won the toss and chose to <b>${esc(m.decision)}</b> first.</div>
+    <div class="score-grid">
+      <div class="score-box"><b>${esc(a.name)}</b><div class="score">${score(m.first===a.id?m.innings1:m.innings2)}</div><div class="muted">${m.first===a.id?"1st innings":"2nd innings"}</div></div>
+      <div class="score-box"><b>${esc(b.name)}</b><div class="score">${score(m.first===b.id?m.innings1:m.innings2)}</div><div class="muted">${m.first===b.id?"1st innings":"2nd innings"}</div></div>
+    </div>
+    <div class="result">🏆 ${esc(winner)} won by ${esc(m.margin)}</div>
+    <div class="verdict"><b>VERDICT</b><br>${esc(verdict)}<br><span class="muted">Paper strength: ${esc(a.name)} ${verdictScoreA} • ${esc(b.name)} ${verdictScoreB}</span></div>
+    <details open><summary>Playing XIs</summary>
+      <div class="score-grid"><div><b>${esc(a.name)}</b><div class="xi">${a.team.map(p=>`<span>${esc(p.name)}</span>`).join("")}</div></div>
+      <div><b>${esc(b.name)}</b><div class="xi">${b.team.map(p=>`<span>${esc(p.name)}</span>`).join("")}</div></div></div>
+    </details>
+    <details open><summary>Key batting & bowling</summary>
+      <div class="score-grid">
+        <div><b>${esc(state.users[m.first===a.id?a.id:b.id]?.name||"Team A")} innings</b>
+          <div class="muted" style="margin-top:8px">${(m.first===a.id?m.innings1:m.innings2).batLines.map(x=>`${esc(x.name)} ${x.runs} (${x.balls})`).join(" • ")}</div>
+          <div class="muted" style="margin-top:8px">${(m.first===a.id?m.innings1:m.innings2).bowlLines.map(x=>`${esc(x.name)} ${x.wickets}/${x.runs}`).join(" • ")}</div>
+        </div>
+        <div><b>${esc(state.users[m.first===b.id?b.id:a.id]?.name||"Team B")} innings</b>
+          <div class="muted" style="margin-top:8px">${(m.first===b.id?m.innings1:m.innings2).batLines.map(x=>`${esc(x.name)} ${x.runs} (${x.balls})`).join(" • ")}</div>
+          <div class="muted" style="margin-top:8px">${(m.first===b.id?m.innings1:m.innings2).bowlLines.map(x=>`${esc(x.name)} ${x.wickets}/${x.runs}`).join(" • ")}</div>
+        </div>
+      </div>
+    </details>
+    <details><summary>Match commentary</summary><div class="commentary">${m.commentary.map((x,i)=>`<div>${i+1}. ${esc(x)}</div>`).join("")}</div></details>
+  </div>`;
+}
+
+/* ---------- rendering ---------- */
+function renderGame(){
+  const us=users(), isHost=state.host===uid, a=state.auction, M=POOLS[state.mode];
+  const players=Object.values(state.players||{});
+  const order={available:0,unsold:1,sold:2,vetoed:3};
+  $("#app").innerHTML=`<div class="top">
+    <div><h1>🏏 Cricket Auction <span class="badge">${esc(M.label)}</span></h1><div class="sub">Room <b>${esc(roomId)}</b> • ${state.phase==="lobby"?"Waiting room":state.phase==="finished"?"Auction complete":"Live auction"} • ${state.startPoints} pts each</div></div>
+    <div class="row"><button class="ghost" id="copy">Copy invite link</button>${isHost?`<button class="danger" id="reset">Reset room</button>`:""}</div>
+  </div>
+  <div class="grid">
+    <div>
+      <div class="card">${state.phase==="lobby"?renderLobbyPanel(us,isHost):state.phase==="finished"?renderFinished(isHost):renderAuction(a,us)}</div>
+      ${state.phase!=="lobby"?renderTeams(us):""}
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Players</h3>
+        <div class="stats">${us.map(u=>`<div class="stat"><span class="muted">${esc(u.name)}${u.id===state.host?" 👑":""}</span><b>${u.points} pts</b><span class="muted">${u.team.length}/${TEAM_SIZE} • ${u.skips} vetoes</span></div>`).join("")}</div>
+        <h3 style="margin:14px 0 0">${esc(M.label)} pool (${players.length})</h3>
+        <div class="players">${players.slice().sort((x,y)=>order[x.status]-order[y.status]).map(p=>`<div class="player" style="opacity:${p.status==="available"?1:.45}"><h3>${p.flag} ${esc(p.name)}</h3><span class="tag">${esc(p.country)}</span><span class="tag">${esc(p.role)}</span><div class="muted" style="font-size:11px;margin-top:5px">${p.status==="available"?"Available":p.status==="sold"?"Sold":p.status==="unsold"?"Unsold":"Vetoed"}</div></div>`).join("")}</div>
+      </div>
+      <div class="card" style="margin-top:18px"><h3 style="margin-top:0">Auction log</h3><div class="log">${logs().slice().reverse().map(x=>`<div><span class="muted">${new Date(x.t).toLocaleTimeString()}</span> — ${esc(x.m)}</div>`).join("")}</div></div>
+    </div>
+  </div>
+  <div class="footer">${esc(M.label)} • 2–3 players • ${state.startPoints} points • ${VETOES} vetoes • ${TEAM_SIZE}-player teams • min price 1</div>`;
+
+  $("#copy").onclick=()=>navigator.clipboard.writeText(inviteLink()).then(()=>alert("Invite link copied. Send it to your friends!"),()=>prompt("Copy this link:",inviteLink()));
+  if(isHost) $("#reset").onclick=resetRoom;
+  const s=$("#start"); if(s) s.onclick=startAuction;
+  document.querySelectorAll("[data-inc]").forEach(b=>b.onclick=()=>doBid(+b.dataset.inc));
+  const p=$("#pass"); if(p) p.onclick=doPass;
+  const v=$("#veto"); if(v) v.onclick=doVeto;
+  const sm=$("#simulateMatch"); if(sm) sm.onclick=simulateMatch;
+  const l=$("#leave"); if(l) l.onclick=()=>{if(unsub)unsub();unsub=null;state=null;roomId=null;location.hash="";renderLobby();};
+}
+function renderLobbyPanel(us,isHost){
+  const M=POOLS[state.mode];
+  return `<div class="center"><h2>Waiting for players</h2>
+    <div class="room-code">${esc(roomId)}</div><div class="share">Share the invite link (button above) with your friends.</div>
+    <div class="notice" style="margin-top:12px">${esc(M.label)} mode • ${state.startPoints} points each • ${M.players.length} players in the pool</div>
+    <div class="stats">${us.map(u=>`<div class="stat"><span class="muted">${esc(u.name)}</span><b>Ready</b></div>`).join("")}</div>
+    ${us.length<2?`<div class="notice">At least 2 players are required. A maximum of 3 can join.</div>`:`<div class="notice good-note">${us.length} players connected. ${isHost?"You can start the auction.":"Waiting for the host to start."}</div>`}
+    ${isHost?`<button class="primary" id="start" ${us.length<2?"disabled":""} style="margin-top:15px">Start auction</button>`:""}
+  </div>`;
+}
+function renderFinished(isHost){
+  const complete=users().filter(u=>u.team.length===TEAM_SIZE);
+  const already=!!state.match;
+  return `<div class="center auction"><div style="font-size:42px">${already?"🏆":"🏏"}</div>
+    <h2>${already?"Match complete":"Auction complete"}</h2>
+    <div class="muted">${complete.length>=2?"Both playing XIs are confirmed.":"Complete both teams first."}</div>
+    ${!already&&isHost&&complete.length>=2?`<div class="controls"><button class="gold" id="simulateMatch">🪙 Toss &amp; Simulate Match</button></div>`:""}
+    ${already?`<div class="notice good-note" style="margin-top:12px">The imaginary match has been simulated and saved for everyone in the room.</div>`:""}
+    <div class="controls">${isHost?`<span class="muted">Use “Reset room” to play again.</span>`:""}<button class="ghost" id="leave">Leave room</button></div>
+  </div>${already?renderMatch():""}`;
+}
+function renderAuction(a,us){
+  if(!a) return `<div class="auction"><h2>Preparing auction…</h2></div>`;
+  const p=state.players[a.playerKey], myTurn=a.turn===uid, mu=us.find(u=>u.id===uid), mb=maxBid(mu);
+  const cur=a.turn?uname(a.turn):"…";
+  const btn=inc=>{const nb=a.currentBid+inc;return `<button class="${inc===1?"primary":"gold"}" data-inc="${inc}" ${myTurn&&nb<=mb?"":"disabled"}>Bid ${nb}${inc>1?` (+${inc})`:""}</button>`};
+  return `<div class="auction">
+    <div class="muted">CURRENT PLAYER</div>
+    <div class="name">${p.flag} ${esc(p.name)}</div>
+    <div class="role">${esc(p.country)} • ${esc(p.role)}</div>
+    <div class="bid">${a.currentBid}</div>
+    <div class="muted">points • ${a.highestBidder?`highest bidder: <b>${esc(uname(a.highestBidder))}</b>`:"no bid yet"}</div>
+    <div class="turn">${myTurn?"YOUR TURN":"Waiting for "+esc(cur)+"…"}</div>
+    <div class="controls">${btn(1)}${btn(2)}${btn(5)}
+      <button class="ghost" id="pass" ${myTurn?"":"disabled"}>Pass</button>
+      <button class="danger" id="veto" ${me.skips>0&&!a.started?"":"disabled"}>Veto player (${me.skips})</button></div>
+    <div class="muted" style="margin-top:10px;font-size:12px">Your max bid right now: <b>${Math.max(0,mb)}</b> (1 point is reserved for each empty slot in your XI). Bidding rotates; when everyone else passes, the highest bidder wins. If all pass with no bid, the player goes unsold and returns once at the end.</div>
+  </div>`;
+}
+function renderTeams(us){
+  return `<div class="card team"><div class="team-head"><h3 style="margin:0">Teams</h3><span class="muted">Target: ${TEAM_SIZE} players</span></div>
+    ${us.map(u=>`<div style="margin-top:12px"><b>${esc(u.name)}</b> <span class="muted">(${u.points} points left • ${u.team.length}/${TEAM_SIZE})</span>
+      <div class="team-list">${u.team.map(x=>`<span class="chip">${esc(x.name)} <span class="muted">${esc(x.role)}</span> — ${x.price}</span>`).join("")||`<span class="muted">No players yet</span>`}</div></div>`).join("")}</div>`;
+}
+
+/* ---------- boot ---------- */
+if(!db){
+  renderLobby("Firebase is not configured yet. Open “Firebase setup” below, paste your web config and press Save & connect.");
+}else if(roomId){
+  subscribe();
+}else{
+  renderLobby();
+}
+</script>
+</body>
+</html>
